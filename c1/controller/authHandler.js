@@ -2,6 +2,7 @@ const User = require('../pkg/users/userSchema');
 //! npm install jsonwebtoken
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { promisify } = require('util');
 
 exports.signup = async (req, res) => {
   try {
@@ -68,6 +69,7 @@ exports.login = async (req, res) => {
     //* 5. Se generia i isprakja cookie
     res.cookie('jwt', token, {
       expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
+
       secure: false,
       httpOnly: true,
     });
@@ -82,4 +84,56 @@ exports.login = async (req, res) => {
       message: err.message,
     });
   }
+};
+
+exports.protect = async (req, res, next) => {
+  try {
+    //* 1) Go zemame tokenot i proveruvame dali e tamu
+    let token;
+    if (req.headers.authorization) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    console.log(token);
+
+    if (!token) {
+      return res.status(400).send('You are not logged i, please log in');
+    }
+
+    //* 2) Vo verifikuvame tokenot i dekodirame
+    function verifyToken(token) {
+      return new Promise((resolve, reject) => {
+        jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
+          if (err) {
+            reject(new Error('Token verification failed'));
+          }
+          resolve(decodedToken);
+        });
+      });
+    }
+    const decodedToken = await verifyToken(token);
+
+    if (!decodedToken) {
+      return res.send('Token is not valid');
+    }
+
+    // const verifyAsync = promisify(jwt.verify);
+    // const decoded = await verifyAsync(token, process.env.JWT_SECRET);
+
+    // const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    // console.log(decoded);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).send('User doesnt longer exist');
+    }
+
+    req.auth = user;
+    next();
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+  // req.header
 };

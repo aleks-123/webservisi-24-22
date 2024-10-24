@@ -13,16 +13,16 @@ app.use(express.json());
 app.use(loggerMiddleware);
 db.init();
 
-app.use(
-  jwt
-    .expressjwt({
-      algorithms: ['HS256'],
-      secret: process.env.JWT_SECRET,
-    })
-    .unless({
-      path: ['/api/v1/signup', '/api/v1/login'],
-    })
-);
+// app.use(
+//   jwt
+//     .expressjwt({
+//       algorithms: ['HS256'],
+//       secret: process.env.JWT_SECRET,
+//     })
+//     .unless({
+//       path: ['/api/v1/signup', '/api/v1/login'],
+//     })
+// );
 
 function loggerMiddleware(req, res, next) {
   console.log(`[${new Date().toDateString()}] ${req.method} ${req.url}`);
@@ -40,7 +40,8 @@ app.use(test);
 app.post('/api/v1/signup', authHandler.signup);
 app.post('/api/v1/login', authHandler.login);
 
-app.get('/movies', movies.getAll);
+app.get('/movies', authHandler.protect, movies.getAll);
+
 app.get('/movies/:id', movies.getOne);
 app.post('/movies', movies.create);
 app.patch('/movies/:id', movies.update);
