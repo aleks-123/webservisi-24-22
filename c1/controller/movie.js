@@ -2,7 +2,8 @@ const Movie = require('../pkg/movies/movieSchema');
 
 exports.getAll = async (req, res) => {
   try {
-    const movies = await Movie.find();
+    console.log(req.info);
+    const movies = await Movie.find().populate('author');
     res.status(200).json({
       status: 'success',
       data: {
@@ -76,6 +77,32 @@ exports.delete = async (req, res) => {
       status: 'success',
       data: null,
     });
+  } catch (err) {
+    res.status(404).json({ status: 'fail', message: err });
+  }
+};
+
+exports.createByUser = async (req, res) => {
+  try {
+    console.log('user', req.auth);
+    const moviePost = await Movie.create({
+      title: req.body.title,
+      year: req.body.year,
+      imbdRating: req.body.imbdRating,
+      author: req.auth.id,
+    });
+    res.status(201).json(moviePost);
+  } catch (err) {
+    res.status(404).json({ status: 'fail', message: err });
+  }
+};
+
+exports.getByUser = async (req, res) => {
+  try {
+    const userId = req.auth.id;
+    const mineMovies = await Movie.find({ author: userId });
+
+    res.status(201).json(mineMovies);
   } catch (err) {
     res.status(404).json({ status: 'fail', message: err });
   }
