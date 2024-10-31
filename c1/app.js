@@ -35,7 +35,7 @@ app.use(
       },
     })
     .unless({
-      path: ['/api/v1/signup', '/api/v1/login', '/login'],
+      path: ['/api/v1/signup', '/api/v1/login', '/login', '/movies', '/movies/:id'],
     })
 );
 
@@ -59,7 +59,7 @@ app.get('/movies', movies.getAll);
 
 app.get('/movies/:id', movies.getOne);
 app.post('/movies', movies.create);
-app.patch('/movies/:id', movies.update);
+app.patch('/movies/:id', movies.uploadMuliplePhoto, movies.update);
 app.delete('/movies/:id', movies.delete);
 
 app.post('/api/moviesbyuser', movies.createByUser);
