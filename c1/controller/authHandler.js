@@ -137,3 +137,27 @@ exports.protect = async (req, res, next) => {
   }
   // req.header
 };
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    console.log(req.query);
+    console.log(req.auth);
+
+    if (req.auth.role !== 'admin') {
+      res.status(404).send('YOU DONT HAVE PERMISION, YOU ARE NOT ADMIN');
+    }
+    const users = await User.find();
+    res.status(200).json({
+      status: 'success',
+      lengthMovies: movies.length(),
+      data: {
+        movies,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};

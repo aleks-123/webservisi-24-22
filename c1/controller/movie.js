@@ -1,7 +1,7 @@
 // req.body - prakjame objekt so koj sakame da go zacuvame vo data baza, najcesto kako json
 // req.params - url/parametar
 // req.header - samiot browser go kreira -  jwt - koj brower - i red drugi parametri
-//* req.file --- objektot na samiot fajl
+//*  req.file--- objektot na samiot fajl
 //? req.query - parametri za prebaruvanje niz data baza ili kverinja
 
 //! npm install multer - biblioteka za dodavanje na fajlovi
@@ -73,10 +73,28 @@ exports.update = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    console.log(req.info);
-    const movies = await Movie.find().populate('author');
+    console.log(req.query);
+    // { page: '1', limit: '4' }
+    const queryObj = { ...req.query };
+    const excludeFields = ['page', 'limit', 'skip'];
+    excludeFields.forEach((items) => delete queryObj[items]); // brishime page, limit, skip od queryObj
+
+    let queryString = JSON.stringify(queryObj);
+    // regex operator
+    queryString = queryString.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
+
+    //back to javascript object
+    const query = JSON.parse(queryString);
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    console.log(query);
+    const movies = await Movie.find(query).skip(skip).limit(limit);
     res.status(200).json({
       status: 'success',
+      lengthMovies: movies.length(),
       data: {
         movies,
       },
