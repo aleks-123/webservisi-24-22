@@ -35,7 +35,7 @@ app.use(
       },
     })
     .unless({
-      path: ['/api/v1/signup', '/api/v1/login', '/login', '/movies', '/movies/:id'],
+      path: ['/api/v1/signup', '/api/v1/login', '/login', '/movies', '/movies/:id', '/forgotpassword'],
     })
 );
 
@@ -54,6 +54,8 @@ app.use(test);
 
 app.post('/api/v1/signup', authHandler.signup);
 app.post('/api/v1/login', authHandler.login);
+app.post('/forgotpassword', authHandler.forgotPassword);
+// app.patch('/resetpassword/:token');
 
 app.get('/movies', movies.getAll);
 

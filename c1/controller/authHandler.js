@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
 const sendMail = require('../pkg/mail/emailService');
 const sendMailgun = require('../pkg/mail/mailgun');
+const crypto = require('crypto');
 
 exports.signup = async (req, res) => {
   try {
@@ -167,6 +168,41 @@ exports.getAllUsers = async (req, res) => {
       data: {
         movies,
       },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).send('This user doesnt exist');
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.passwordResetExpires = Date.now() + 30 * 60 * 1000;
+
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetpassword/${resetToken}`;
+
+    const message = `Ja zaboravivte lozinkata, ve molime iskoristete Patch requiest so vashata nova lozina na ova url ${resetUrl}`;
+
+    await sendMail({
+      email: user.email,
+      subject: 'Vashiot resetiracki token (30 minuti validen)',
+      message: message,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token send to email',
     });
   } catch (err) {
     res.status(404).json({
