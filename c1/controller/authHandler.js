@@ -3,6 +3,8 @@ const User = require('../pkg/users/userSchema');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
+const sendMail = require('../pkg/mail/emailService');
+const sendMailgun = require('../pkg/mail/mailgun');
 
 exports.signup = async (req, res) => {
   try {
@@ -12,14 +14,26 @@ exports.signup = async (req, res) => {
       password: req.body.password,
     });
 
-    // const token = jwt.sign({ id: newUser._id, name: newUser.name, role: newUser.role }, process.env.JWT_SECRET, {
-    //   expiresIn: process.env.JWT_EXPIRES,
-    // });
+    const token = jwt.sign({ id: newUser._id, name: newUser.name, role: newUser.role }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES,
+    });
 
-    // res.cookie('jwt', token, {
-    //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
-    //   secure: false,
-    //   httpOnly: true,
+    res.cookie('jwt', token, {
+      expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
+      secure: false,
+      httpOnly: true,
+    });
+
+    await sendMail({
+      email: newUser.email,
+      subject: 'Registracija na Nike Shoes',
+      message: `Vi blagodarime na doverbata ${newUser.name}, uspesno kreiravte account na nashata aplikacija`,
+    });
+
+    // await sendMailgun({
+    //   email: newUser.email,
+    //   subject: 'Registracija na Nike Shoes',
+    //   message: `Vi blagodarime na doverbata ${newUser.name}, uspesno kreiravte account na nashata aplikacija`,
     // });
 
     res.status(201).json({
