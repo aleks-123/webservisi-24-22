@@ -55,7 +55,7 @@ app.use(test);
 app.post('/api/v1/signup', authHandler.signup);
 app.post('/api/v1/login', authHandler.login);
 app.post('/forgotpassword', authHandler.forgotPassword);
-// app.patch('/resetpassword/:token');
+app.patch('/resetpassword/:token', authHandler.resetPassword);
 
 app.get('/movies', movies.getAll);
 

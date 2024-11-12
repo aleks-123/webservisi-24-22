@@ -211,3 +211,41 @@ exports.forgotPassword = async (req, res) => {
     });
   }
 };
+
+exports.resetPassword = async (req, res) => {
+  try {
+    // 1) Go dobivame tokenot
+    const token = req.params.token;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    // 2) go dobivame korisnikot sto gi ima toj token
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(404).send('Korisnikot ne e pronajden, tokenot e istecen');
+    }
+
+    // 3) promena na korisnickata lozinka
+    user.password = req.body.password;
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+    await user.save();
+
+    // 4) opcionalno isprakjame jwt token
+    // const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    //   expiresIn: process.env.JWT_EXPIRES,
+    // });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Uspesno promeneta lozinka',
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
