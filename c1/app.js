@@ -69,7 +69,7 @@ app.get('/api/moviesbyuser', movies.getByUser);
 
 //! view handlers
 app.get('/login', viewHandler.getLoginForm);
-// app.get('/viewMovies', viewHandler);
+app.get('/viewMovies', viewHandler);
 
 app.listen(10000, (err) => {
   if (err) {
